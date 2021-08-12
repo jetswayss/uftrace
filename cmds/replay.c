@@ -1114,6 +1114,7 @@ static void print_remaining_stack(struct opts *opts,
 		if (skip_sys_exit(opts, task))
 			continue;
 
+		/* sometimes it has many 0 entries in the fstack. ignore them */
 		for (k = 0; k < task->stack_count; k++) {
 			struct fstack *fstack;
 
@@ -1128,6 +1129,14 @@ static void print_remaining_stack(struct opts *opts,
 
 	if (total == 0)
 		return;
+
+	if (total == 1) {
+		struct fstack *fstack = fstack_get(task, 0);
+
+		/* ignore if it only has a schedule event */
+		if (fstack && fstack->addr == EVENT_ID_PERF_SCHED_OUT)
+			return;
+	}
 
 	pr_out("\nuftrace stopped tracing with remaining functions");
 	pr_out("\n================================================\n");
